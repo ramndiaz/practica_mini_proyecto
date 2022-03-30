@@ -3,19 +3,25 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash #para hashear la contrasena
 from bson import json_util #para convertir la respuesta desde mongo en un json
 from bson.objectid import ObjectId #para buscar en mongo con el id pasando de string a object
+from flask_cors import CORS, cross_origin
+
 
 app = Flask(__name__)
+
+CORS(app)
 
 app.config['MONGO_URI']='mongodb://127.0.0.1:27017/practica2db'
 
 mongo = PyMongo(app)
 
+@cross_origin
 @app.route('/users', methods=['GET'])
 def get_users():
     users = mongo.db.users.find()
     response = json_util.dumps(users)
     return Response(response, mimetype='application/json')
 
+@cross_origin
 @app.route('/users/<id>', methods=['GET'])
 def get_user(id):
     user = mongo.db.users.find_one({'_id': ObjectId(id)})
@@ -23,12 +29,14 @@ def get_user(id):
     #return response si retorno asi se envia en formato string, abajo tiene formato json
     return Response(response, mimetype='application/json')
 
+@cross_origin
 @app.route('/users/<id>', methods=['DELETE'])
 def delete_user(id):
     mongo.db.users.delete_one({'_id': ObjectId(id)})
     response = jsonify({'messsage': ' User ' + id + ' was delete'})
     return response
 
+@cross_origin
 @app.route('/users/<id>', methods=['PUT'])
 def update_user(id):
     username = request.json['username']
@@ -52,6 +60,7 @@ def update_user(id):
     else:
         return not_found()
 
+@cross_origin
 @app.route('/users', methods=['POST'])
 def create_user():
     username = request.json['username']
@@ -84,6 +93,7 @@ def create_user():
     else:
         return not_found()
 
+@cross_origin
 @app.errorhandler(404)
 def not_found(error=None):
     message = jsonify({
